@@ -1,0 +1,36 @@
+<mat-expansion-panel
+        hideToggle
+        [expanded]="activeTab === 1"
+        (opened)="setActiveTab(1)"
+    >
+        <mat-expansion-panel-header>
+            <mat-panel-title class="center"><b> Track</b> </mat-panel-title>
+            <mat-panel-description>
+                Analyze use of hashtag
+                <mat-icon>chat</mat-icon>
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <form class="grid-checkNews" #hashtagForm="ngForm">
+            <mat-form-field>
+                <input
+                    matInput
+                    placeholder="Hashtag"
+                    [(ngModel)]="hashtagModel"
+                    name="hashtag"
+                    required
+                />
+            </mat-form-field>
+        </form>
+
+        <mat-action-row>
+            <button
+                mat-button
+                color="primary"
+                (click)="searchHashtag()"
+                [disabled]="!hashtagForm.form.valid"
+            >
+                Search tweets
+            </button>
+        </mat-action-row>
+    </mat-expansion-panel>

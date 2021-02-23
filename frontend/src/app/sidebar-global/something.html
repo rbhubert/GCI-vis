@@ -1,0 +1,42 @@
+
+        <form class="grid-addAccount" #accountForm="ngForm">
+            <mat-form-field>
+                <mat-select
+                    placeholder="Social Network"
+                    [(ngModel)]="accountModel[0]"
+                    name="socialNetwork"
+                    required
+                >
+                    <mat-option *ngFor="let sn of socialNetworks" [value]="sn">
+                        {{ sn }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field>
+                <input
+                    matInput
+                    placeholder="Account"
+                    [(ngModel)]="accountModel[1]"
+                    name="account"
+                    required
+                />
+            </mat-form-field>
+        </form>
+
+        <mat-action-row>
+            <button
+                mat-button
+                color="primary"
+                (click)="followAccount()"
+                [disabled]="(!accountForm.form.valid || canNoFollow())"
+            >
+                Follow
+            </button>
+            <mat-progress-spinner
+                *ngIf="waitingForJob"
+                [color]="primary"
+                [mode]="'indeterminate'"
+            >
+            </mat-progress-spinner>
+        </mat-action-row>

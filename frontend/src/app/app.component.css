@@ -1,0 +1,28 @@
+.mat-drawer-container {
+    background-color: white;
+}
+
+.body-container {
+    position: fixed;
+    height: 100%;
+    max-height: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+
+.sidenav-content {
+    align-items: center;
+    justify-content: center;
+}
+
+.sidenav-left {
+    width: 320px;
+    height: 100%;
+    background-color: rgb(248, 248, 248);
+}
+
+.sidenav-right {
+    width: 250px;
+    height: 100%;
+    background-color: rgb(248, 248, 248);
+}

@@ -1,0 +1,30 @@
+<mat-form-field class="example-form example-full-width">
+    <mat-select
+        required
+        class="example-form example-full-width"
+        [(ngModel)]="requestModel"
+    >
+        <mat-option *ngFor="let request of requestsTypes" [value]="request">
+            {{ request }}</mat-option
+        >
+    </mat-select>
+    <mat-label><b>Type of requests</b></mat-label>
+</mat-form-field>
+
+<mat-grid-list cols="2">
+    <ng-container *ngFor="let element of getKeys()">
+        <mat-grid-tile *ngIf="canShow(element)" class="divVis">
+            <div class="divVis">
+                <button
+                    mat-fab
+                    color="primary"
+                    (click)="addVisualization(element)"
+                    [disabled]="disableVis || inArray(element)"
+                >
+                    <mat-icon>{{ getIcon(element) }}</mat-icon>
+                </button>
+                <h4 mat-line class="divText">{{ getText(element) }}</h4>
+            </div>
+        </mat-grid-tile>
+    </ng-container>
+</mat-grid-list>

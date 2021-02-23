@@ -1,0 +1,43 @@
+<form class="grid-addAccount" #accountForm="ngForm">
+	<mat-form-field>
+		<mat-select
+			placeholder="Social Network"
+			[(ngModel)]="accountModel[0]"
+			name="socialNetwork"
+			required
+		>
+			<mat-option *ngFor="let sn of socialNetworks" [value]="sn">
+				{{ sn }}
+			</mat-option>
+		</mat-select>
+	</mat-form-field>
+
+	<mat-form-field>
+		<input
+			matInput
+			placeholder="Account"
+			[(ngModel)]="accountModel[1]"
+			name="account"
+			required
+		/>
+	</mat-form-field>
+</form>
+
+<mat-action-row class="alerts-container">
+	<button
+		mat-button
+		color="primary"
+		(click)="followAccount()"
+		[disabled]="!accountForm.form.valid || canNoFollow()"
+	>
+		Follow
+	</button>
+</mat-action-row>
+
+<mat-card class="alerts" *ngFor="let element of getValues()">
+	<p>Recovering tweets from {{element[1]}}</p>
+	<mat-progress-bar mode="indeterminate"></mat-progress-bar>
+</mat-card>
+
+
+

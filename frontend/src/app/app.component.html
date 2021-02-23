@@ -1,0 +1,30 @@
+<mat-drawer-container class="body-container" autosize>
+    <mat-drawer #drawerLeft class="sidenav-left" mode="side">
+        <app-sidebar-global
+            #sidebarGlobal
+            [drawerLeft]="drawerLeft"
+            [drawerRight]="drawerRight"
+        >
+        </app-sidebar-global>
+    </mat-drawer>
+
+    <mat-drawer #drawerRight class="sidenav-right" mode="side" position="end">
+        <app-add-visualization #addVisualization> </app-add-visualization>
+    </mat-drawer>
+
+    <div class="sidenav-content">
+        <button type="button" mat-button (click)="drawerLeft.toggle()">
+            Follow account/hashtags or check news
+        </button>
+        <button
+            type="button"
+            mat-button
+            (click)="drawerRight.toggle()"
+            [disabled]="sidebarGlobal.disabledVis"
+        >
+            Add visualization
+        </button>
+        <mat-divider></mat-divider>
+        <app-visualizations #visualizations> </app-visualizations>
+    </div>
+</mat-drawer-container>

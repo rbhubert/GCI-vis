@@ -1,0 +1,62 @@
+<mat-accordion class="example-headers-align">
+    <mat-expansion-panel
+        hideToggle
+        [expanded]="activeTab === 0"
+        (opened)="setActiveTab(0)"
+    >
+        <mat-expansion-panel-header>
+            <mat-panel-title class="center"> <b> Follow </b> </mat-panel-title>
+            <mat-panel-description>
+                Follow an account
+                <mat-icon>hearing</mat-icon>
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+        
+        <app-account-followed-manager #addVisualization>
+        </app-account-followed-manager>
+    </mat-expansion-panel>
+
+    
+    <mat-expansion-panel
+        hideToggle
+        [expanded]="activeTab === 2"
+        (opened)="setActiveTab(2)"
+    >
+        <mat-expansion-panel-header>
+            <mat-panel-title class="center"><b> Check </b></mat-panel-title>
+            <mat-panel-description>
+                Analyze news comments
+                <mat-icon>library_books</mat-icon>
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <form class="grid-checkNews" #newsForm="ngForm">
+            <mat-form-field>
+                <input
+                    matInput
+                    placeholder="News URL"
+                    [(ngModel)]="newsModel"
+                    name="newsURL"
+                    required
+                />
+            </mat-form-field>
+        </form>
+
+        <mat-action-row>
+            <button
+                mat-button
+                color="primary"
+                (click)="checkNews()"
+                [disabled]="!newsForm.form.valid"
+            >
+                Check news
+            </button>
+            <mat-progress-spinner
+                *ngIf="loading"
+                [color]="primary"
+                [mode]="'indeterminate'"
+            >
+            </mat-progress-spinner>
+        </mat-action-row>
+    </mat-expansion-panel>
+</mat-accordion>
