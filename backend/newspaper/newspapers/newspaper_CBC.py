@@ -7,10 +7,10 @@ from selenium.common.exceptions import TimeoutException, ElementNotInteractableE
 from selenium.webdriver import Firefox
 from selenium.webdriver.support.ui import WebDriverWait
 
-from config import crawler
-from enums.newsItem import NewsItem
-from utils.formatter import format_newsItem, format_comment
-from utils.utilsDate import get_past_date
+from newspaper.config import crawler
+from newspaper.enums.newsItem import NewsItem
+from newspaper.utils.formatter import format_newsItem, format_comment
+from newspaper.utils.utilsDate import get_past_date
 
 
 # Scraps the webpage _news_url_ and get all the comments associated to this new.

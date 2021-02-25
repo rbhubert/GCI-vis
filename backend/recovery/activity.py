@@ -3,18 +3,19 @@ import pandas
 from enums import Responses
 from enums.Emotions import Emotions
 from enums.dbStructure import Structure
-from utils.utilsDate import daterange
+from utils.get_emotions import get_emotions_social_media
+from utils.utils_date import daterange
 
 
 # Returns the value of the interaction in the entry
-def interactionValues(entry, interaction):
-    iValue = entry[Structure.INTERACTIONS][interaction]
-    if isinstance(iValue, list):
-        return len(iValue)
-    elif isinstance(iValue, dict):
-        return sum(iValue.values())
+def interaction_values(entry, interaction):
+    i_value = entry[Structure.INTERACTIONS][interaction]
+    if isinstance(i_value, list):
+        return len(i_value)
+    elif isinstance(i_value, dict):
+        return sum(i_value.values())
     else:
-        return iValue
+        return i_value
 
 
 # For each date in daterange(_posts_), returns:
@@ -23,15 +24,20 @@ def interactionValues(entry, interaction):
 #   - the ids of those tweets,
 #   - the interactions values received
 #   - the emotions values associated to those tweets
-def get_activity(posts, structureInteraction):
+def get_activity(posts, structure_interaction):
     posts_df = pandas.DataFrame(list(posts))
+    emotions_column = []
+    for index, post in posts_df.iterrows():
+        emotions_column.append(get_emotions_social_media(post))
+
+    posts_df[Structure.EMOTIONS] = emotions_column
 
     for emotion in Emotions:
         posts_df[emotion.value] = posts_df[Structure.EMOTIONS].apply(lambda x: x.get(emotion.value, 0))
 
-    for interaction in structureInteraction:
+    for interaction in structure_interaction:
         posts_df[interaction] = posts_df.apply(
-            lambda entry: interactionValues(entry, interaction), axis=1)
+            lambda entry: interaction_values(entry, interaction), axis=1)
 
     min_date = posts_df[Structure.CREATION_TIME].min()
     max_date = posts_df[Structure.CREATION_TIME].max()
@@ -60,7 +66,7 @@ def get_activity(posts, structureInteraction):
         for emotion in Emotions:
             activity_to_return[ndate][Responses.EMOTIONS][emotion.value] = int(posts_in_ndate[emotion.value].sum())
 
-        for interaction in structureInteraction:
+        for interaction in structure_interaction:
             activity_to_return[ndate][Responses.INTERACTIONS][interaction] = int(posts_in_ndate[interaction].sum())
 
     return activity_to_return

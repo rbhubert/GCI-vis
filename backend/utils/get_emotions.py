@@ -1,32 +1,30 @@
 import pandas
 
+from enums import Token
 from enums.Emotions import Emotions
-from enums.dbStructure import Structure, Post
+from enums.dbStructure import Structure
+from utils.text_preprocessing import split_text_twitter, split_text_newspaper
 
 
 # Returns the emotions associated to the _post_. If is not a comment, it counts the emotions in each of its comments.
-def get_emotions(post, smStructure, iscomment):
-    if iscomment:
-        sentiments = __get_emotions(post)
-    else:
-        sentiments = {}
-        comments = post[smStructure.INTERACTIONS][smStructure.Interactions.COMMENTS]
-        comments_sentiments = [comment[smStructure.EMOTIONS] for comment in comments]
+def get_emotions_social_media(post):
+    sentiments = {}
+    comments = post[Structure.INTERACTIONS][Structure.Interactions.COMMENTS]
+    comments_sentiments = [__get_emotions_comment(comment) for comment in comments]
 
-        datafram = pandas.DataFrame(comments_sentiments)
+    dataframe = pandas.DataFrame(comments_sentiments)
 
-        for emot in Emotions:
-            sentiments[emot.value] = 0 if datafram.empty else datafram[emot.value].sum().item()
+    for emot in Emotions:
+        sentiments[emot.value] = 0 if dataframe.empty else dataframe[emot.value].sum().item()
 
     return sentiments
 
 
 # Returns the emotions of the comment _post_
-def __get_emotions(post):
-    post_text = post[Structure.POST][Post.SPLITTED]
-
+def __get_emotions_comment(post):
+    tokens = post[Structure.POST][Structure.Post.SPLITTED]
     words = pandas.DataFrame({
-        "emotions": [x["emotions"] for x in post_text]
+        "emotions": [x[Token.EMOTIONS] for x in tokens]
     })
 
     sentiments = {}
@@ -38,7 +36,7 @@ def __get_emotions(post):
     return sentiments
 
 
-def get_emotions_newItem(comments):
+def get_emotions_news_item(comments):
     # for each comment in comments
     # for each reply in comment
     # sum every emotion
@@ -66,16 +64,18 @@ def get_emotions_newItem(comments):
     return emotions
 
 
-def get_emotions_comment(comment):
+def get_emotions_news_comment(comment):
     comment_text = comment["text"]
+    tokens = split_text_newspaper(comment_text)
 
     words = pandas.DataFrame({
-        "emotions": [x["emotions"] for x in comment_text]
+        "emotions": [x[Token.EMOTIONS] for x in tokens]
     })
 
-    emotions = {}
+    sentiments = {}
+
     for emot in Emotions:
         mask = words.emotions.apply(lambda x: emot.value in x)
-        emotions[emot.value] = len(words[mask])
+        sentiments[emot.value] = len(words[mask])
 
-    return emotions
+    return sentiments

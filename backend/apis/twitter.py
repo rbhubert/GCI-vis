@@ -1,3 +1,4 @@
+import random
 import time
 
 import tweepy
@@ -6,37 +7,23 @@ from twarc import Twarc
 from apis.socialMedia import SocialMedia
 from database.database import Collection, DBCollections
 from enums.apiStructure import TwitterAPIAccess, TwitterAPIStructure
-from enums.dbStructure import TwitterStructure, User, Post
-from utils.getEmotions import get_emotions
+from enums.dbStructure import TwitterStructure, User
 from utils.singleton import Singleton
-from utils.textPreprocessing import split_text
-from utils.utilsDate import twitter_format
+from utils.utils_date import twitter_format
+from enums.dbStructure import Structure
+from utils.text_preprocessing import split_text_twitter
 
-
-# Class Twitter is a Singleton. It maintains a connection with the Twitter API (Rest and Streaming).
+# Class Twitter is a Singleton. It maintains a connection with the Twitter API (Rest).
 # Gets the information of the new user to follow (REST) and its last tweets published.
 # Then, it listen for every other tweet publish by the user or comment made to one of its tweets (Streaming).
 # This class structure the tweets and save them in the database.
-class Twitter(SocialMedia, metaclass=Singleton):
-    # StreamListerer listens for any tweet published by any of the users in the STREAM_FILTER list, or for any
-    # comments made in one of the tweets of any of the users in the STREAM_FILTER list.
-    # class StreamListener(tweepy.StreamListener):
-    #     def __init__(self, outerclass):
-    #         super().__init__()
-    #         self.outerclass = outerclass
-    #
-    #     def on_status(self, status):
-    #         tweet = status._json
-    #
-    #         if tweet[TwitterAPIStructure.IN_RESPONSE_TO] is not None:
-    #             self.outerclass._add_comment(tweet)
-    #
-    #             # TODO identify new post made by user...
+class Twitter(SocialMedia, tweepy.StreamListener, metaclass=Singleton):
 
-    # This method initializes Twitter class. Sets the connections with the REST and Streaming API's and with the API
-    # used to retrieve comments. Also sets the connection with the database (setting the db collection related).
+    # This method initializes Twitter class. Sets the connections with the REST API and with the API
+    # used to retrieve comments. Also sets the connection with the database (setting the related db collection).
     def __init__(self):
-        super().__init__()
+        SocialMedia.__init__(self)
+        tweepy.StreamListener.__init__(self)
 
         self.NAME = DBCollections.TWITTER.capitalize()
 
@@ -51,16 +38,15 @@ class Twitter(SocialMedia, metaclass=Singleton):
         self.twitterComments = Twarc(TwitterAPIAccess.AUTH[0], TwitterAPIAccess.AUTH[1],
                                      TwitterAPIAccess.ACCESS_TOKEN[0], TwitterAPIAccess.ACCESS_TOKEN[1])
 
-        # api streaming
-        # self.streamListener = self.StreamListener(self)
-        # self.twitterStream = tweepy.Stream(auth=auth, listener=self.streamListener)
-        # self.STREAM_FILTER = []
-
         # enums for the database structure and database collection related
         self.dbStructure = TwitterStructure()
         self.dbCollection = Collection(DBCollections.TWITTER)
 
-    def get_accountInformation(self, username):
+        ## api streaming
+        self.twitter_stream = tweepy.Stream(auth=auth, listener=self)
+        self.STREAM_FILTER = []
+
+    def get_account_information(self, username):
         user_info = self.twitterAPI.get_user(username)._json
         user_id = user_info[TwitterAPIStructure.USER[1]]
 
@@ -74,42 +60,31 @@ class Twitter(SocialMedia, metaclass=Singleton):
 
     # This method gets the ID and the last 100 posts published by the user (account). If the user already exists in
     # the database, it recovers the posts published by the user since the last post saved in the database. It saves
-    # the user information and the tweets in the database. It adds the user to the STREAM_FILTER list (streaming).
-    def add_account(self, accountID):
-        super().add_account(accountID)
+    # the user information and the tweets in the database.
+    def add_account(self, account_id):
+        super().add_account(account_id)
 
-        latest_post = self.dbCollection.get_latest_post(accountID)
+        latest_post = self.dbCollection.get_latest_post(account_id)
         if latest_post is None:
-            for status in tweepy.Cursor(self.twitterAPI.user_timeline, id=int(accountID),
+            for status in tweepy.Cursor(self.twitterAPI.user_timeline, id=int(account_id),
                                         tweet_mode=TwitterAPIStructure.TWEET_MODE).items(300):
                 post = self.__get_post_information(status._json)
                 self.dbCollection.save_post(post[self.dbStructure.ID], status._json, post)
-                time.sleep(5) # todo change to sleep random between 2 y 5
+                time.sleep(random.randint(2, 5))
         else:
             since_tweetID = latest_post[self.dbStructure.ID]
-            for status in tweepy.Cursor(self.twitterAPI.user_timeline, id=int(accountID), since_id=since_tweetID,
+            for status in tweepy.Cursor(self.twitterAPI.user_timeline, id=int(account_id), since_id=since_tweetID,
                                         tweet_mode=TwitterAPIStructure.TWEET_MODE).items():
                 post = self.__get_post_information(status._json)
                 self.dbCollection.save_post(post[self.dbStructure.ID], status._json, post)
-                time.sleep(5)
+                time.sleep(random.randint(2, 5))
 
-        # add the user to the streaming
-        # self.STREAM_FILTER.append(accountID)
-        # self.twitterStream.disconnect()
-        # self.twitterStream.filter(follow=self.STREAM_FILTER, is_async=True)
-
+        self.__add_to_stream(account_id)
         return True
 
-    # This method removes the user from the streaming
-    def remove_account(self, accountID):
-        super().remove_account(accountID)
-
-        # if accountID in self.STREAM_FILTER:
-        #    self.STREAM_FILTER.remove(accountID)
-        #    self.twitterStream.disconnect()
-        #    self.twitterStream.filter(follow=self.STREAM_FILTER, is_async=True)
-
-        return True
+    def remove_account(self, account_id):
+        super().remove_account(account_id)
+        self.__remove_of_stream(account_id)
 
     # This private method returns the original_post properly structured, ready to save in the database.
     def __get_post_information(self, original_post):
@@ -138,22 +113,19 @@ class Twitter(SocialMedia, metaclass=Singleton):
                     TwitterAPIStructure.USER[2]]
             },
             self.dbStructure.POST: {
-                Post.ORIGINAL: post_text,
-                Post.SPLITTED: split_text(post_text)
+                Structure.Post.ORIGINAL: post_text,
+                Structure.Post.SPLITTED: split_text_twitter(post_text)
             },
             self.dbStructure.CREATION_TIME: twitter_format(
                 original_post[TwitterAPIStructure.CREATION_TIME]),
             self.dbStructure.HASHTAGS: hashtags,
             self.dbStructure.MULTIMEDIA: self.__get_multimedia(original_post, iscomment),
             self.dbStructure.INTERACTIONS: self.__get_interaction(original_post, iscomment),
-            self.dbStructure.EMOTIONS: {},
             self.dbStructure.UPDATE: False
         }
 
         if not iscomment:
             new_post[self.dbStructure.SOCIAL_NETWORK] = self.NAME
-
-        new_post[self.dbStructure.EMOTIONS] = get_emotions(new_post, self.dbStructure, iscomment)
 
         return new_post
 
@@ -204,7 +176,7 @@ class Twitter(SocialMedia, metaclass=Singleton):
 
         return interaction
 
-    # This private method searchs for the replies made to the original_post using the Twarc API.
+    # This private method searches for the replies made to the original_post using the Twarc API.
     # It structures each of the comments and returns a list of comments.
     def __get_comments(self, original_post):
         print("               -> Getting comments...")
@@ -225,10 +197,6 @@ class Twitter(SocialMedia, metaclass=Singleton):
     def add_comment(self, new_comment):
         print("     -> Structuring new comment...")
 
-        # TODO what if new_comment is a reply to a tweet not-saved in DB? We have to retrieve and save it in the DB
-        #  before trying to save the reply
-
-        # TODO we also have to update the emotions values of the main post...
         in_response_to = new_comment[TwitterAPIStructure.IN_RESPONSE_TO]
 
         main_post = self.dbCollection.get_post(in_response_to)
@@ -254,9 +222,6 @@ class Twitter(SocialMedia, metaclass=Singleton):
         for post in posts:
             post_again = self.twitterAPI.get_status(post[self.dbStructure.ID])
 
-            # this search for all comments all over again...
-            # interaction_updated = self.__get_interaction(post_again, False)
-
             # this only update #retweets and #favorites
             interaction_updated = {
                 self.dbStructure.TwitterInteractions.COMMENTS:
@@ -273,42 +238,26 @@ class Twitter(SocialMedia, metaclass=Singleton):
 
             self.dbCollection.update_post(post[self.dbStructure.ID], post)
 
-    def getInteractionStructure(self):
+    def get_interaction_structure(self):
         return self.dbStructure.TwitterInteractions()
 
-    def getMultimediaStructure(self):
+    def get_multimedia_structure(self):
         return self.dbStructure.Multimedia()
 
-
-class TwitterStreaming(tweepy.StreamListener, metaclass=Singleton):
-    twitter = Twitter()
-
-    def __init__(self, ):
-        super().__init__()
-
-        # Twitter connection
-        auth = tweepy.OAuthHandler(TwitterAPIAccess.AUTH[0], TwitterAPIAccess.AUTH[1])
-        auth.set_access_token(TwitterAPIAccess.ACCESS_TOKEN[0], TwitterAPIAccess.ACCESS_TOKEN[1])
-
-        # api streaming
-        self.twitterStream = tweepy.Stream(auth=auth, listener=self)
-        self.STREAM_FILTER = []
-
+    # streaming on_status
     def on_status(self, status):
         tweet = status._json
 
         if tweet[TwitterAPIStructure.IN_RESPONSE_TO] is not None:
-            self.twitter.add_comment(tweet)
+            self.add_comment(tweet)
 
-            # TODO identify new post made by user...
+    def __add_to_stream(self, account_id):
+        self.STREAM_FILTER.append(account_id)
+        self.twitter_stream.disconnect()
+        self.twitter_stream.filter(follow=self.STREAM_FILTER, is_async=True)
 
-    def add_toStream(self, accountID):
-        self.STREAM_FILTER.append(accountID)
-        self.twitterStream.disconnect()
-        self.twitterStream.filter(follow=self.STREAM_FILTER, is_async=True)
-
-    def remove_ofStream(self, accountID):
-        if accountID in self.STREAM_FILTER:
-            self.STREAM_FILTER.remove(accountID)
-            self.twitterStream.disconnect()
-            self.twitterStream.filter(follow=self.STREAM_FILTER, is_async=True)
+    def __remove_of_stream(self, account_id):
+        if account_id in self.STREAM_FILTER:
+            self.STREAM_FILTER.remove(account_id)
+            self.twitter_stream.disconnect()
+            self.twitter_stream.filter(follow=self.STREAM_FILTER, is_async=True)

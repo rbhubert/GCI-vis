@@ -1,11 +1,10 @@
 import abc
 
 
-# Class base for any kind of SocialMedia.
+# Base class for any kind of SocialMedia.
 class SocialMedia:
     def __init__(self):
         self.NAME = ""
-        # self.ACCOUNT_COLLECTION = AccountsDB()
         self.dbCollection = None
 
     @abc.abstractmethod
@@ -40,10 +39,10 @@ class SocialMedia:
 
     # Returns the multimediaStructure related to the socialMedia instance.
     @abc.abstractmethod
-    def getMultimediaStructure(self):
+    def get_multimedia_structure(self):
         pass
 
     # Returns the interactionStructure related to the socialMedia instance.
     @abc.abstractmethod
-    def getInteractionStructure(self):
+    def get_interaction_structure(self):
         pass

@@ -1,4 +1,4 @@
-from newspapers import newspaper_CBC, newspaper_LaNueva, newspaper_Clarin, newspaper_Pagina12
+from newspaper.newspapers import newspaper_CBC, newspaper_LaNueva, newspaper_Clarin, newspaper_Pagina12
 
 mapping_newspaper = {
     "clarin": newspaper_Clarin,

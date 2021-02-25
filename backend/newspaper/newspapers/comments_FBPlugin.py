@@ -4,9 +4,9 @@ from datetime import datetime
 
 from selenium.webdriver import Firefox
 
-from config import crawler
-from enums.newsItem import NewsItem
-from utils.formatter import format_comment
+from newspaper.config import crawler
+from newspaper.enums.newsItem import NewsItem
+from newspaper.utils.formatter import format_comment
 
 
 # Scraps the section related to the fb plugin to get all the comments associated to a news item

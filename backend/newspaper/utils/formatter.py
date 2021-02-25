@@ -1,4 +1,4 @@
-from enums.newsItem import NewsItem
+from newspaper.enums.newsItem import NewsItem
 
 
 # Structures a new item, with its url, title, creation date and comments and emotions associated to it.

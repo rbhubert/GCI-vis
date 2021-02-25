@@ -3,9 +3,9 @@ from datetime import datetime
 
 from selenium.webdriver import Firefox
 
-from config import crawler
-from newspapers import comments_FBPlugin
-from utils.formatter import format_newsItem
+from newspaper.config import crawler
+from newspaper.newspapers import comments_FBPlugin
+from newspaper.utils.formatter import format_newsItem
 
 
 # Scraps for the title and creationDate of the news for newspaper LaNueva.

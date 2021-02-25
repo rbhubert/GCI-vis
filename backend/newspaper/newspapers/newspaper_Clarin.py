@@ -5,8 +5,8 @@ from selenium.common.exceptions import TimeoutException, ElementNotInteractableE
 from selenium.webdriver import Firefox
 from selenium.webdriver.support.ui import WebDriverWait
 
-from config import crawler
-from utils.formatter import format_newsItem, format_comment
+from newspaper.config import crawler
+from newspaper.utils.formatter import format_newsItem, format_comment
 
 
 # Scraps the webpage _news_url_ and get all the comments associated to this news

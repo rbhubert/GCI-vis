@@ -5,7 +5,7 @@ import argparse
 import tldextract
 import validators
 
-from config.valid_newspapers import mapping_newspaper, get_valid_newspaper_str
+from newspaper.config.valid_newspapers import mapping_newspaper, get_valid_newspaper_str
 
 
 # This class will validate whether the url parameter is a valid url and if we have the crawler for that newspaper

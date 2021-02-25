@@ -20,25 +20,6 @@ class Database(metaclass=Singleton):
         return self.__db[item]
 
 
-# TODO obtain lexicon depending of language /// spanish or english etc... 
-# Class for lexicon/emotions access
-class LexiconDB:
-    def __init__(self):
-        self.db = Database()
-        self.collection = DBCollections.LEXICON
-
-    # Retuns the lexicon information associated to the _lexicon_ parameter.
-    # If this lexicon is not in the database, it searchs for the _stem_ parameter.
-    def get_lexicon(self, lexicon, stem):
-        #lexicon_info = self.db[self.collection].find_one({"spanish": lexicon})
-        lexicon_info = self.db[self.collection].find_one({"english": lexicon})
-
-        if lexicon_info is None:
-            lexicon_info = self.db[self.collection].find_one({"stem": stem})
-
-        return lexicon_info
-
-
 # Class for user/account store and access.
 class AccountsDB:
     def __init__(self):
@@ -77,18 +58,18 @@ class Collection:
 
     # Returns True if the user (_accountID_) has posts in the DB
     def has_posts(self, accountID):
-        userId_field = get_userID()
+        userId_field = get_user_id()
         return self.db[self.collection].find({userId_field: accountID}).count() > 0
 
     # Returns the posts of the accounts_id
     def get_posts(self, accounts_id):
-        userId_field = get_userID()
+        userId_field = get_user_id()
         posts = self.db[self.collection].find({userId_field: {DBOperators.IN: accounts_id}})
         return posts
 
     # Returns the posts of all the accounts (ids) in a time window (since-until)
     def get_posts_timewindow(self, accounts_id, since=None, until=None):
-        userId_field = get_userID()
+        userId_field = get_user_id()
         if since is None or until is None:
             posts = self.db[self.collection].find(
                 {userId_field: {DBOperators.IN: accounts_id}})
@@ -109,7 +90,7 @@ class Collection:
 
     # Saves post in the collection
     def save_post(self, post_id, original_post, post):
-        self.db[get_completeCollection(self.collection)].insert_one(original_post)
+        self.db[get_complete_collection(self.collection)].insert_one(original_post)
         self.db[self.collection].replace_one(filter={Structure.ID: post_id}, replacement=post, upsert=True)
 
     # Updates the post information (post) that matches the post_id
@@ -118,19 +99,22 @@ class Collection:
 
     # Returns the posts that will be updated if its 'update' field is True
     def get_posts_to_update(self, accounts):
-        userId_field = get_userID()
+        userId_field = get_user_id()
         posts = self.db[self.collection].find(
             {UPDATE: True, userId_field: {DBOperators.IN: accounts}})
         return posts
 
     # Returns the latest post published by account_id
     def get_latest_post(self, account_id):
-        userId_field = get_userID()
+        userId_field = get_user_id()
         result = self.db[self.collection].find({userId_field: account_id})
         if result.count():
             return result.sort([(Structure.CREATION_TIME, pymongo.DESCENDING)])[0]
         else:
             return None
+
+    def get_all_posts(self):
+        return self.db[self.collection].find({})
 
 
 # Class for comments in newspapers
@@ -146,42 +130,49 @@ class NewspapersDB:
         return comments
 
     # Saves in the database a newItem (url + list of comments)
-    def add_newItem(self, newItem):
+    def add_news_item(self, newItem):
         return self.db[self.collection].insert(newItem)
 
     # Returns the newItem with "new_url" new_url
-    def get_newItem(self, new_url):
+    def get_news_item(self, new_url):
         return self.db[self.collection].find_one({NewspaperStructure.URL: new_url}, {"_id": 0})
 
-    def update_newItem(self, newItem):
+    def update_news_item(self, newItem):
         return self.db[self.collection].replace_one(filter={NewspaperStructure.URL: newItem[NewspaperStructure.URL]},
                                                     replacement=newItem)
 
 
-class isFollowing:
+class Followed:
     def __init__(self):
         self.db = Database()
         self.collection = DBCollections.FOLLOWED
 
-    def is_following(self, userID, account):
-        isFollowing = self.db[self.collection].find_one({FollowingStructure.ID: userID},
-                                                        {FollowingStructure.Account.SOCIAL_NETWORK: account[0]},
-                                                        {FollowingStructure.Account.NAME: account[1]}, {"_id": 0})
+    def is_following(self, user_id, social_media):
+        isFollowing = self.db[self.collection].find_one({FollowingStructure.ID: user_id},
+                                                        {FollowingStructure.SOCIAL_NETWORK: social_media},
+                                                        {"_id": 0})
         return isFollowing is not None
 
-    # Saves in the database a newItem (url + list of comments)
-    def add_following(self, userID, account):
+    def add_following(self, user_id, account):
         item = {
-            FollowingStructure.ID: userID,
-            FollowingStructure.ACCOUNT: {
-                FollowingStructure.Account.SOCIAL_NETWORK: account[0],
-                FollowingStructure.Account.NAME: account[1]
-            }
+            FollowingStructure.ID: user_id,
+            FollowingStructure.USERNAME: account[0],
+            FollowingStructure.SOCIAL_NETWORK: account[1]
         }
         return self.db[self.collection].insert(item)
+
+    def remove_following(self, user_id, social_media):
+        return self.db[self.collection].delete_one({FollowingStructure.ID: user_id},
+                                                   {FollowingStructure.SOCIAL_NETWORK: social_media},
+                                                   {"_id": 0})
+
+    def get_followed(self):
+        return self.db[self.collection].find({})
 
 
 # Creation of a NewspaperDataBase Instance.
 newspaperDB = NewspapersDB()
 # Creation of a AccountsDataBase Instance.
 accountsDB = AccountsDB()
+# Creation of a FollowedDataBase Instance.
+followedDB = Followed()

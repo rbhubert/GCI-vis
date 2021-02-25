@@ -3,20 +3,24 @@ import string
 
 from emoji import UNICODE_EMOJI
 from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from tokenizer import tokenizer
 
 from enums import Token, TokenType
 from enums.Emotions import Emotions
-from utils.emotionLexicon import emotionLexicon
+from utils.emotion_lexicon import emotionLexicon
 
-isNumber = re.compile(r'\d+(?:,\d*)?')
-isPunctuation = re.compile(r"[{}]".format(string.punctuation + "¿¡"))
+# tweet tokenizer
+# pip install git+https://github.com/erikavaris/tokenizer.git
+
+is_number = re.compile(r'\d+(?:,\d*)?')
+is_punctuation = re.compile(r"[{}]".format(string.punctuation + "¿¡"))
 
 stop_words = stopwords.words('spanish')
 stop_words.append("rt")
 
-Tokenizer = tokenizer.TweetTokenizer(preserve_url=False, preserve_case=False)
-emLe = emotionLexicon()
+tweet_tokenizer = tokenizer.TweetTokenizer(preserve_url=False, preserve_case=False)
+emotion_lexicon = emotionLexicon()
 
 
 # This method will:
@@ -25,22 +29,30 @@ emLe = emotionLexicon()
 # Finally, we will have a list of tokens, each of them will have:
 #   - its type, its value and its emotions (just a list of the enum.Emotions that have)
 
-def split_text(text):
-    tokens_w_stopwords_punctuation = Tokenizer.tokenize(text)
+def split_text_twitter(text):
+    tokens_w_stopwords_punctuation = tweet_tokenizer.tokenize(text)
+    return __get_tokens_and_emotions(tokens_w_stopwords_punctuation)
 
-    tokens = [token for token in tokens_w_stopwords_punctuation if
-              # token not in stop_words and token not in punctuation and not isNumber.match(token)]
-              token not in stop_words and not isPunctuation.match(token) and not isNumber.match(token)]
+
+def split_text_newspaper(text):
+    tokens = word_tokenize(text)
+    return __get_tokens_and_emotions(tokens)
+
+
+def __get_tokens_and_emotions(unprocess_tokens):
+    tokens = [token for token in unprocess_tokens if
+              token not in stop_words and not is_punctuation.match(token) and not is_number.match(
+                  token)]
 
     tokens_to_return = []
 
     for token in tokens:
-        token_emotion = emLe.getEmotion(token)
-        index = token_emotion.index.item()
+        token_emotion = emotion_lexicon.get_emotion(token)
         emotions = []
 
         for emotion in Emotions:
-            if token_emotion.at[index, emotion.value]:
+            # if token_emotion.at[index, emotion.value]:
+            if token_emotion[emotion.value] > 0:
                 emotions.append(emotion.value)
 
         # Identification of the type of token...

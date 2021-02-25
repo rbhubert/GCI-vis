@@ -1,11 +1,5 @@
 # In a database...
 
-# Fields for the text post.
-class Post:
-    ORIGINAL = "original"
-    SPLITTED = "splitted"
-
-
 # Fields for a User.
 class User:
     ID = "user_id"
@@ -15,6 +9,10 @@ class User:
 
 # Fields for a Post (base).
 class Structure:
+    class Post:
+        ORIGINAL = "original"
+        SPLITTED = "splitted"
+
     # Fields for Interactions
     class Interactions:
         COMMENTS = "comments"
@@ -82,7 +80,6 @@ class FacebookStructure(Structure):
     TYPE = "post_type"
 
 
-# Fields for a newsItem.
 class NewspaperStructure:
     class Content:
         SECTION_TITLE = "section_title"
@@ -101,13 +98,11 @@ class NewspaperStructure:
     class Comments:
         ID = "id"
         USERNAME = "username"
-        RAW_TEXT = "raw_text"
         TEXT = "text"
         CREATION_TIME = "creation_time"
         LIKES = "likes"
         DISLIKES = "dislikes"
         REPLIES = "replies"
-        EMOTIONS = "emotions"
 
     URL = "url"
     TITLE = "title"
@@ -115,14 +110,10 @@ class NewspaperStructure:
     CONTENT_TEXT = "content_text"
     CREATION_TIME = "creation_time"
     COMMENTS = "comments"
-    EMOTIONS = "emotions"
     LAST_COMMENT = "last_comment"
 
 
 class FollowingStructure:
-    class Account:
-        NAME = "username"
-        SOCIAL_NETWORK = "social_network"
-
+    USERNAME = "username"
+    SOCIAL_NETWORK = "social_network"
     ID = "user_id"
-    ACCOUNT = "account"

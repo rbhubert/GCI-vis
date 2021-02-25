@@ -1,19 +1,23 @@
 import pandas
 
 from enums import Token, TokenType
-from enums.dbStructure import Structure, NewspaperStructure, Post
+from enums.dbStructure import Structure, NewspaperStructure
+from utils.text_preprocessing import split_text_newspaper
 
 
 # Returns the valid words for a wordcloud. This means that there are no stopwords and punctuation signs.
 # It returns the words, and the frequency and the emotions associated with each one.
-def get_wordCloud_socialMedia(posts):
+def get_wordcloud_social_media(posts):
     all_words = []
     for post in posts:
+        tokens = post[Structure.POST][Structure.Post.SPLITTED]
+
         all_words.extend([
             {"text": token[Token.VALUE],
              "emotions": token[Token.EMOTIONS]} for token in
-            post[Structure.POST][Post.SPLITTED]
-            if token[Token.TYPE] == TokenType.WORD or token[Token.TYPE] == TokenType.HASHTAG
+            tokens
+            if
+            token[Token.TYPE] == TokenType.WORD or token[Token.TYPE] == TokenType.HASHTAG
         ])
 
     return get_frequent_words(all_words, posts.count())
@@ -21,13 +25,14 @@ def get_wordCloud_socialMedia(posts):
 
 # Returns the valid words for a wordcloud. This means that there are no stopwords and punctuation signs.
 # It returns the words, and the frequency and the emotions associated with each one.
-def get_wordCloud_newspaper(comments):
+def get_wordcloud_newspaper(comments):
     list_words = []
     for comment in comments:
+        tokens = split_text_newspaper(comment[NewspaperStructure.Comments.TEXT])
         list_words.extend([
             {"text": token[Token.VALUE],
              "emotions": token[Token.EMOTIONS]} for token in
-            comment[NewspaperStructure.Comments.TEXT]
+            tokens
             if token[Token.TYPE] == TokenType.WORD or token[Token.TYPE] == TokenType.HASHTAG
         ])
     if not list_words:  # is empty
