@@ -7,7 +7,7 @@ You can see the research papers that analyze different Latin American countries 
 - [Examining government-citizen interactions on Twitter using visual and sentiment analysis](https://dl.acm.org/doi/abs/10.1145/3209281.3209356), publication for the _International Conference on Digital Government Research: Governance in the Data Age_ (2018). 
 - [Analyzing and Visualizing Government-Citizen Interactions on Twitter to Support Public Policy-making](https://dl.acm.org/doi/abs/10.1145/3360001), published in  _Digital Government: Research and Practice_ (2020).
 
-# Technologies used
+# Used technologies
 The backend for this project was written with Python 3.8.1. The following libraries were used:
 - [flask](https://flask.palletsprojects.com/en/2.0.x/) for the set up of the web server;
 - [tweepy](https://www.tweepy.org/) and [twarc](https://github.com/DocNow/twarc) for retrieving tweets and all the comments related;
